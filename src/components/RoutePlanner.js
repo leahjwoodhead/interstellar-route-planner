@@ -2,6 +2,9 @@ import React, {useState, useEffect} from "react";
 import styled, { keyframes } from 'styled-components'
 import { fetchGateData } from "../utils/api";
 import { listGateNames } from "../utils/utils";
+import ListGates from "./ListGates";
+import FindRoute from "./FindRoute"
+import FindTransport from "./FindTransport"
 
 const fadeInOut = keyframes`
   0% { opacity: 0; }
@@ -11,46 +14,45 @@ const fadeInOut = keyframes`
 
 const AnimatedTitle = styled.header`
   animation: ${fadeInOut} 5s infinite;
-  background-colour: white;
   color: white;
   font-size: 100px;
   margin-top: 100px;
 `
 
 const PageDescription = styled.p`
-  color: white;
+  color: grey;
   font-size: 20px;
 `
 
-const GateListContainer = styled.ul`
- list-style-type: none;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: 1500px;
+const PageBorder = styled.div`
+  border: 2px solid grey;
+  width: 2000px;
+  margin-top: 100px;
+  height: 2000px
 `
 
-const GateListItem = styled.li`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 200px;
-  height: 200px;
-  margin: 50px;
-  border-radius: 40%;
-  background-color: grey;
-  color: white;
-  font-size: 16px;
-  text-align: center;
-  line-height: 1.5;
-  margin-top: 100px;
+const TabButton = styled.button`
+  color: grey;
+  font-size: 80px;
+  margin: 20px;
+  background: none;
+  border: none;
+  padding: 30;
+  cursor: pointer;
+  outline: none; 
+
+  &:hover {
+    background-color: white;
+    border-radius: 10%
+  }
 `
 
 function RoutePlanner() {
   const [gateData, setGateData] = useState([]);
   const [gateNames, setGateNames] = useState([])
-
+  const [selectedTab, setSelectedTab] = useState("gates")
+  const [tabs, setTabs] = useState(["gates", "routes", "transport"])
+  const [isLoading, setLoading] = useState(true)
 
 
   useEffect(() => {
@@ -59,29 +61,61 @@ function RoutePlanner() {
       const gateData = await fetchGateData()
       setGateData(gateData)
       setGateNames(listGateNames(gateData))
+      setLoading(false)
     }
 
     fetchData()
 }, []); 
+
+
+  const renderTabContent = (gateNames) => {
+
+    if (selectedTab == "gates") {
+      return (
+        <ListGates gateNames={gateNames} />
+      )
+    } else if (selectedTab == "routes") {
+        return (
+          <FindRoute gateNames={gateNames}/>
+        )
+    } else if (selectedTab == "transport") {
+      return (
+        <FindTransport/>
+      )
+    }
+  }
+
+  const updateTabSelection = (e) => {
+    setSelectedTab(e.target.value)
+  }
+
   
 
   return (
       <div>
-        <AnimatedTitle>
-          Interstellar Route Planner
-        </AnimatedTitle>
-        <PageDescription>
-          Use this tool to get Hyperspace Gate information and to work out the cost of your journey.
-        </PageDescription>
-        <GateListContainer>
-          {gateNames.map(gateName => (
-              <GateListItem>
-                {gateName.toUpperCase()}
-              </GateListItem>
-            )) 
-          }
-        </GateListContainer>
-  
+        <PageBorder>
+          <AnimatedTitle>
+            Interstellar Route Planner
+          </AnimatedTitle>
+          <PageDescription>
+            Use this tool to get Hyperspace Gate information and to work out the cost of your journey.
+          </PageDescription>
+          {tabs.map(tab => {
+            return (
+              <TabButton value={tab} onClick={(e) => updateTabSelection(e)}>
+                {tab} 
+              </TabButton>
+            )
+          })}
+          <div>
+            {isLoading ? (
+                  <p>Loading</p>
+            ) : (
+              renderTabContent(gateNames)
+              )
+            }
+          </div>
+        </PageBorder>
       </div>
     )
 }
